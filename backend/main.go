@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -13,6 +14,7 @@ import (
 
 	"github.com/UmutAkturk14/web-crawler/backend/internal/models"
 	"github.com/UmutAkturk14/web-crawler/backend/internal/routes"
+	"github.com/gin-contrib/cors"
 )
 
 var db *gorm.DB
@@ -44,6 +46,16 @@ func main() {
 	}
 
 	r := gin.Default()
+
+	// ✅ Enable CORS for localhost:8088
+	r.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"http://localhost:8088"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Accept"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}))
 
 	// Healthcheck
 	r.GET("/ping", func(c *gin.Context) {
