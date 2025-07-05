@@ -35,37 +35,74 @@ func RegisterURLRoutes(r *gin.Engine, db *gorm.DB) {
 		c.JSON(http.StatusCreated, urlEntry)
 	})
 
-	r.GET("/urls", func(c *gin.Context) {
-		var urls []models.URL
-		if err := db.Find(&urls).Error; err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
+r.GET("/urls", func(c *gin.Context) {
+    // Default pagination params
+    const defaultPage = 1
+    const defaultPageSize = 10
 
-		var response []models.URLResponse
-		for _, u := range urls {
-			response = append(response, models.URLResponse{
-				ID:            u.ID,
-				URL:           u.URL,
-				Status:        u.Status,
-				Title:         u.Title,
-				HTMLVersion:   u.HTMLVersion,
-				H1Count:       u.H1Count,
-				H2Count:       u.H2Count,
-				H3Count:       u.H3Count,
-				H4Count:       u.H4Count,
-				H5Count:       u.H5Count,
-				H6Count:       u.H6Count,
-				InternalLinks: u.InternalLinks,
-				ExternalLinks: u.ExternalLinks,
-				BrokenLinks:   u.BrokenLinks,
-				HasLoginForm:  u.LoginFormFound,
-				CreatedAt:     u.CreatedAt,
-			})
-		}
+    // Parse query params for pagination
+    pageStr := c.Query("page")
+    pageSizeStr := c.Query("page_size")
 
-		c.JSON(http.StatusOK, response)
-	})
+    page := defaultPage
+    pageSize := defaultPageSize
+
+    if p, err := strconv.Atoi(pageStr); err == nil && p > 0 {
+        page = p
+    }
+
+    if ps, err := strconv.Atoi(pageSizeStr); err == nil && ps > 0 && ps <= 100 {
+        pageSize = ps
+    }
+
+    var totalCount int64
+    if err := db.Model(&models.URL{}).Count(&totalCount).Error; err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+        return
+    }
+
+    var urls []models.URL
+
+    // Calculate offset
+    offset := (page - 1) * pageSize
+
+    // Query with pagination
+    if err := db.Limit(pageSize).Offset(offset).Find(&urls).Error; err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+        return
+    }
+
+    var response []models.URLResponse
+    for _, u := range urls {
+        response = append(response, models.URLResponse{
+            ID:            u.ID,
+            URL:           u.URL,
+            Status:        u.Status,
+            Title:         u.Title,
+            HTMLVersion:   u.HTMLVersion,
+            H1Count:       u.H1Count,
+            H2Count:       u.H2Count,
+            H3Count:       u.H3Count,
+            H4Count:       u.H4Count,
+            H5Count:       u.H5Count,
+            H6Count:       u.H6Count,
+            InternalLinks: u.InternalLinks,
+            ExternalLinks: u.ExternalLinks,
+            BrokenLinks:   u.BrokenLinks,
+            HasLoginForm:  u.LoginFormFound,
+            CreatedAt:     u.CreatedAt,
+        })
+    }
+
+    c.JSON(http.StatusOK, gin.H{
+        "page":       page,
+        "page_size":  pageSize,
+        "total_count": totalCount,  // <<<< Add this!
+        "urls":       response,
+    })
+})
+
+
 
 	r.POST("/url", func(c *gin.Context) {
 		var req struct {
@@ -121,6 +158,33 @@ func RegisterURLRoutes(r *gin.Engine, db *gorm.DB) {
 
 		c.JSON(http.StatusOK, response)
 	})
+
+	r.DELETE("/url/:id", func(c *gin.Context) {
+		idStr := c.Param("id")
+		id, err := strconv.Atoi(idStr)
+		if err != nil || id <= 0 {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid URL ID"})
+			return
+		}
+
+		var urlEntry models.URL
+		if err := db.First(&urlEntry, id).Error; err != nil {
+			if err == gorm.ErrRecordNotFound {
+				c.JSON(http.StatusNotFound, gin.H{"error": "URL not found"})
+			} else {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			}
+			return
+		}
+
+		if err := db.Delete(&urlEntry).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete URL"})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{"message": "URL deleted successfully"})
+	})
+
 
 	r.POST("/crawl/:id", func(c *gin.Context) {
 		idStr := c.Param("id")
