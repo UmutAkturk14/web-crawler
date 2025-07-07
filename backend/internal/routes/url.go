@@ -195,61 +195,48 @@ func RegisterURLRoutes(r *gin.Engine, db *gorm.DB) {
 		})
 	})
 
+r.GET("/url/:id", func(c *gin.Context) {
+	idParam := c.Param("id")
+	id, err := strconv.Atoi(idParam)
+	if err != nil || id <= 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID"})
+		return
+	}
 
-	r.POST("/url", func(c *gin.Context) {
-		var req struct {
-			ID  uint   `json:"id"`
-			URL string `json:"url"`
+	var urlEntry models.URL
+	// Preload BrokenLinksDetails to fetch associated broken links
+	if err := db.Preload("BrokenLinksDetails").First(&urlEntry, id).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Record not found"})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		}
+		return
+	}
 
-		if err := c.ShouldBindJSON(&req); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
-			return
-		}
+	response := models.URLResponse{
+		ID:               urlEntry.ID,
+		URL:              urlEntry.URL,
+		Status:           urlEntry.Status,
+		Title:            urlEntry.Title,
+		HTMLVersion:      urlEntry.HTMLVersion,
+		H1Count:          urlEntry.H1Count,
+		H2Count:          urlEntry.H2Count,
+		H3Count:          urlEntry.H3Count,
+		H4Count:          urlEntry.H4Count,
+		H5Count:          urlEntry.H5Count,
+		H6Count:          urlEntry.H6Count,
+		InternalLinks:    urlEntry.InternalLinks,
+		ExternalLinks:    urlEntry.ExternalLinks,
+		BrokenLinks:      urlEntry.BrokenLinks,
+		HasLoginForm:     urlEntry.LoginFormFound,
+		CreatedAt:        urlEntry.CreatedAt,
+		BrokenLinksDetails: urlEntry.BrokenLinksDetails,  // Added here
+	}
 
-		var urlEntry models.URL
-		var err error
+	c.JSON(http.StatusOK, response)
+})
 
-		switch {
-		case req.ID != 0:
-			err = db.First(&urlEntry, req.ID).Error
-		case req.URL != "":
-			err = db.Where("url = ?", req.URL).First(&urlEntry).Error
-		default:
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Either 'id' or 'url' must be provided"})
-			return
-		}
-
-		if err != nil {
-			if err == gorm.ErrRecordNotFound {
-				c.JSON(http.StatusNotFound, gin.H{"error": "Record not found"})
-			} else {
-				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			}
-			return
-		}
-
-		response := models.URLResponse{
-			ID:            urlEntry.ID,
-			URL:           urlEntry.URL,
-			Status:        urlEntry.Status,
-			Title:         urlEntry.Title,
-			HTMLVersion:   urlEntry.HTMLVersion,
-			H1Count:       urlEntry.H1Count,
-			H2Count:       urlEntry.H2Count,
-			H3Count:       urlEntry.H3Count,
-			H4Count:       urlEntry.H4Count,
-			H5Count:       urlEntry.H5Count,
-			H6Count:       urlEntry.H6Count,
-			InternalLinks: urlEntry.InternalLinks,
-			ExternalLinks: urlEntry.ExternalLinks,
-			BrokenLinks:   urlEntry.BrokenLinks,
-			HasLoginForm:  urlEntry.LoginFormFound,
-			CreatedAt:     urlEntry.CreatedAt,
-		}
-
-		c.JSON(http.StatusOK, response)
-	})
 
 	r.DELETE("/url/:id", func(c *gin.Context) {
 		idStr := c.Param("id")
@@ -276,7 +263,6 @@ func RegisterURLRoutes(r *gin.Engine, db *gorm.DB) {
 
 		c.JSON(http.StatusOK, gin.H{"message": "URL deleted successfully"})
 	})
-
 
 	r.POST("/crawl/:id", func(c *gin.Context) {
 		idStr := c.Param("id")
