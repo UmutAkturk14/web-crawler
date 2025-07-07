@@ -1,18 +1,36 @@
 import type { UrlReport } from "../types/UrlReport";
+import { statusStyles } from "../helpers/statusStyle";
 
 type Props = {
   url: UrlReport;
   selected: boolean;
   onSelect: () => void;
+  onCrawl: () => void;
 };
 
-export default function UrlTableRow({ url, selected, onSelect }: Props) {
+export default function UrlTableRow({
+  url,
+  selected,
+  onSelect,
+  onCrawl,
+}: Props) {
+  const handleEntryCrawl = () => {
+    console.log("Crawl started for URL ID:", url.ID);
+    onCrawl();
+  };
+
+  const currentStatus = statusStyles[
+    url.status as keyof typeof statusStyles
+  ] ?? {
+    buttonColor: "",
+    bgColor: "bg-red-100",
+    buttonText: "Retry",
+  };
+
+  const { buttonColor, bgColor, buttonText } = currentStatus;
+
   return (
-    <tr
-      className={`hover:bg-blue-50 transition cursor-default ${
-        url.status === "pending" ? "bg-red-500" : ""
-      }`}
-    >
+    <tr className={`hover:bg-blue-50 transition cursor-default ${bgColor}`}>
       <td className="px-4 py-3">
         <input
           type="checkbox"
@@ -26,16 +44,19 @@ export default function UrlTableRow({ url, selected, onSelect }: Props) {
       </td>
       <td className="px-4 py-3">{url.ID}</td>
       <td className="px-4 py-3 font-medium">{url.title}</td>
-      <td className="px-4 py-3 text-blue-600 underline">
+      <td className="px-4 py-3 max-w-xs truncate text-blue-600 underline">
         <a
           href={url.url}
           target="_blank"
           rel="noopener noreferrer"
           onClick={(e) => e.stopPropagation()}
+          className="block truncate"
+          title={url.url}
         >
           {url.url}
         </a>
       </td>
+
       <td className="px-4 py-3">{url.status}</td>
       <td className="px-4 py-3">{url.html_version}</td>
       <td className="px-4 py-3">{url.h1_count}</td>
@@ -50,6 +71,13 @@ export default function UrlTableRow({ url, selected, onSelect }: Props) {
       <td className="px-4 py-3">{url.has_login_form ? "Yes" : "No"}</td>
       <td className="px-4 py-3">
         {new Date(url.created_at).toLocaleDateString()}
+      </td>
+      <td className="pr-4 py-3" onClick={handleEntryCrawl}>
+        <button
+          className={`px-3 py-2 rounded-2xl border-1 transition-colors ${buttonColor}`}
+        >
+          {buttonText}
+        </button>
       </td>
     </tr>
   );

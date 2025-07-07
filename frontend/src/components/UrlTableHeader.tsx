@@ -53,6 +53,7 @@ export default function UrlTableHeader({
           </th>
         );
       })}
+      <th className="px4- py-3 whitespace-nowrap">Crawl</th>
     </tr>
   );
 }

@@ -11,6 +11,9 @@ export default function Dashboard() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
+  const [runningCrawls, setRunningCrawls] = useState<
+    Record<number, AbortController>
+  >({});
 
   useEffect(() => {
     fetchUrls();
@@ -33,30 +36,65 @@ export default function Dashboard() {
           ? Math.ceil(response.data.total_count / pageSize)
           : 1
       );
-
-      data
-        .filter((url) => url.status === "pending")
-        .forEach((url) => {
-          triggerCrawlAndUpdate(url.ID);
-        });
     } catch (error) {
       console.error("Failed to fetch URLs:", error);
     }
   };
 
   const triggerCrawlAndUpdate = async (id: number) => {
+    // If already running, cancel instead
+    if (runningCrawls[id]) {
+      runningCrawls[id].abort();
+      setRunningCrawls((prev) => {
+        const updated = { ...prev };
+        delete updated[id];
+        return updated;
+      });
+      setStatus(id, "pending");
+      return;
+    }
+
+    const controller = new AbortController();
+    setRunningCrawls((prev) => ({ ...prev, [id]: controller }));
+    setStatus(id, "running");
+
     try {
-      const crawlResponse = await axios.post<UrlReport>(
-        `http://localhost:8080/crawl/${id}`
+      const response = await axios.post<UrlReport>(
+        `http://localhost:8080/crawl/${id}`,
+        {},
+        { signal: controller.signal }
       );
 
-      const updatedUrl = crawlResponse.data;
+      const updatedUrl = response.data;
 
       setUrls((prev) =>
         prev.map((url) => (url.ID === updatedUrl.ID ? updatedUrl : url))
       );
+      setStatus(id, updatedUrl.status || "completed");
     } catch (err) {
-      console.error(`Failed to crawl URL with ID ${id}:`, err);
+      if (
+        axios.isCancel(err) ||
+        (typeof err === "object" &&
+          err !== null &&
+          "name" in err &&
+          (err as { name?: string }).name === "CanceledError") ||
+        (typeof err === "object" &&
+          err !== null &&
+          "message" in err &&
+          (err as { message?: string }).message === "canceled")
+      ) {
+        console.warn(`Crawl for ID ${id} was cancelled`);
+        setStatus(id, "pending");
+      } else {
+        console.error(`Crawl failed for ID ${id}:`, err);
+        setStatus(id, "error");
+      }
+    } finally {
+      setRunningCrawls((prev) => {
+        const updated = { ...prev };
+        delete updated[id];
+        return updated;
+      });
     }
   };
 
@@ -91,7 +129,17 @@ export default function Dashboard() {
   };
 
   const handleBulkReanalyze = async () => {
-    alert(`Re-analyze request sent for IDs: ${selectedIds.join(", ")}`);
+    selectedIds.forEach((id) => {
+      setStatus(id, "queued");
+      triggerCrawlAndUpdate(id);
+    });
+    setSelectedIds([]);
+  };
+
+  const setStatus = (id: number, status: UrlReport["status"]) => {
+    setUrls((prev) =>
+      prev.map((url) => (url.ID === id ? { ...url, status } : url))
+    );
   };
 
   const filteredUrls = urls.filter(
@@ -118,6 +166,7 @@ export default function Dashboard() {
           selectedIds={selectedIds}
           onSelect={handleSelect}
           onSelectAll={handleSelectAll}
+          onCrawl={triggerCrawlAndUpdate} // pass it down
         />
 
         {/* Pagination Controls */}

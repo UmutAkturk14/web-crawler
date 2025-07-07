@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import UrlTableHeader from "./UrlTableHeader";
 import UrlTableRow from "./UrlTableRow";
 import type { UrlReport } from "../types/UrlReport";
+import { statusStyles } from "../helpers/statusStyle";
 
 type Props = {
   urls: UrlReport[];
@@ -9,6 +10,7 @@ type Props = {
   selectedIds: number[];
   onSelect: (id: number) => void;
   onSelectAll: () => void;
+  onCrawl: (id: number) => void;
 };
 
 export default function UrlTable({
@@ -17,6 +19,7 @@ export default function UrlTable({
   selectedIds,
   onSelect,
   onSelectAll,
+  onCrawl,
 }: Props) {
   const [sortKey, setSortKey] = useState<keyof UrlReport | null>(null);
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
@@ -31,11 +34,13 @@ export default function UrlTable({
   };
 
   const sortedUrls = useMemo(() => {
-    if (!sortKey) return urls;
+    if (!sortKey) return [...urls]; // no mutation
 
     return [...urls].sort((a, b) => {
       const aVal = a[sortKey];
       const bVal = b[sortKey];
+
+      if (aVal === undefined || bVal === undefined) return 0;
 
       if (typeof aVal === "number" && typeof bVal === "number") {
         return sortDirection === "asc" ? aVal - bVal : bVal - aVal;
@@ -49,7 +54,7 @@ export default function UrlTable({
 
   return (
     <>
-      {/* Desktop Table: hidden on small screens */}
+      {/* Desktop Table */}
       <div className="hidden sm:block w-full min-h-[80svh] overflow-x-auto rounded-lg border border-gray-200 bg-white shadow">
         <table className="min-w-[1200px] text-sm">
           <thead className="bg-gray-100 text-left">
@@ -64,15 +69,17 @@ export default function UrlTable({
             />
           </thead>
           <tbody>
-            {sortedUrls.map((url) => (
-              <UrlTableRow
-                key={url.ID}
-                url={url}
-                selected={selectedIds.includes(url.ID)}
-                onSelect={() => onSelect(url.ID)}
-              />
-            ))}
-            {sortedUrls.length === 0 && (
+            {sortedUrls.length > 0 ? (
+              sortedUrls.map((url) => (
+                <UrlTableRow
+                  key={url.ID}
+                  url={url}
+                  selected={selectedIds.includes(url.ID)}
+                  onSelect={() => onSelect(url.ID)}
+                  onCrawl={() => onCrawl(url.ID)}
+                />
+              ))
+            ) : (
               <tr>
                 <td
                   colSpan={16}
@@ -86,7 +93,7 @@ export default function UrlTable({
         </table>
       </div>
 
-      {/* Mobile Cards: shown only on small screens */}
+      {/* Mobile Cards */}
       <div className="sm:hidden space-y-4">
         {sortedUrls.length === 0 && (
           <div className="text-center text-gray-500 py-10">
@@ -94,57 +101,79 @@ export default function UrlTable({
           </div>
         )}
 
-        {sortedUrls.map((url) => (
-          <div
-            key={url.ID}
-            className={`p-4 border border-gray-200 rounded shadow bg-white ${
-              selectedIds.includes(url.ID) ? "ring-2 ring-blue-500" : ""
-            }`}
-            onClick={() => onSelect(url.ID)}
-          >
-            <div className="flex items-center justify-between mb-2">
-              <input
-                type="checkbox"
-                checked={selectedIds.includes(url.ID)}
-                onChange={() => onSelect(url.ID)}
-                className="mr-2"
-                onClick={(e) => e.stopPropagation()}
-              />
-              <span
-                className="font-semibold truncate max-w-[70%]"
-                title={url.url}
-              >
-                {url.url}
-              </span>
-              <span
-                className={`px-2 py-0.5 rounded text-xs font-medium ${
-                  url.status === "pending"
-                    ? "bg-yellow-200 text-yellow-800"
-                    : url.status === "done"
-                    ? "bg-green-200 text-green-800"
-                    : "bg-gray-200 text-gray-600"
-                }`}
-              >
-                {url.status}
-              </span>
-            </div>
-            {url.title && (
-              <div
-                className="text-gray-700 text-sm mb-1 truncate"
-                title={url.title}
-              >
-                {url.title}
+        {sortedUrls.map((url) => {
+          const status = url.status as keyof typeof statusStyles;
+          const buttonColor = statusStyles[status]?.buttonColor ?? "";
+          const buttonText = statusStyles[status]?.buttonText ?? "Retry";
+
+          return (
+            <div
+              key={url.ID}
+              className={`p-4 border border-gray-200 rounded shadow bg-white ${
+                selectedIds.includes(url.ID) ? "ring-2 ring-blue-500" : ""
+              }`}
+              onClick={() => onSelect(url.ID)}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <input
+                  type="checkbox"
+                  checked={selectedIds.includes(url.ID)}
+                  onChange={() => onSelect(url.ID)}
+                  className="mr-2"
+                  onClick={(e) => e.stopPropagation()}
+                />
+                <span
+                  className="font-semibold truncate max-w-[70%]"
+                  title={url.url}
+                >
+                  {url.url}
+                </span>
+                <span
+                  className={`px-2 py-0.5 rounded text-xs font-medium ${
+                    url.status === "pending"
+                      ? "bg-yellow-200 text-yellow-800"
+                      : url.status === "done"
+                      ? "bg-green-200 text-green-800"
+                      : "bg-gray-200 text-gray-600"
+                  }`}
+                >
+                  {url.status}
+                </span>
               </div>
-            )}
-            {/* Add a few more key details if you want */}
-            <div className="text-xs text-gray-500 flex flex-wrap gap-2">
-              <div>H1: {url.h1_count}</div>
-              <div>Internal: {url.internal_links}</div>
-              <div>Broken: {url.broken_links}</div>
-              {/* Add more if needed */}
+
+              {url.title && (
+                <div
+                  className="text-gray-700 text-sm mb-1 truncate"
+                  title={url.title}
+                >
+                  {url.title}
+                </div>
+              )}
+
+              <div className="text-xs text-gray-500 flex flex-wrap gap-2">
+                <div>H1: {url.h1_count}</div>
+                <div>H2: {url.h2_count}</div>
+                <div>H3: {url.h3_count}</div>
+                <div>H4: {url.h4_count}</div>
+                <div>H5: {url.h5_count}</div>
+                <div>H6: {url.h6_count}</div>
+                <div>Internal: {url.internal_links}</div>
+                <div>Broken: {url.broken_links}</div>
+                <div>
+                  <button
+                    className={`px-3 py-2 rounded-2xl border transition-colors ${buttonColor}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onCrawl(url.ID);
+                    }}
+                  >
+                    {buttonText}
+                  </button>
+                </div>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </>
   );

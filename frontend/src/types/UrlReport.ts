@@ -1,7 +1,7 @@
 export interface UrlReport {
   ID: number;
   url: string;
-  status: "done" | "error" | "pending" | "crawling";
+  status: "done" | "error" | "pending" | "running" | "queued";
   title: string;
   html_version: string;
   internal_links: number;
