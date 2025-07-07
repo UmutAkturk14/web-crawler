@@ -1,3 +1,5 @@
+import type { BrokenLink } from "./broken-links";
+
 export interface UrlReport {
   ID: number;
   url: string;
@@ -15,4 +17,6 @@ export interface UrlReport {
   h4_count: number;
   h5_count: number;
   h6_count: number;
+
+  broken_links_details?: BrokenLink[];
 }

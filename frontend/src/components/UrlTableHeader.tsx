@@ -1,4 +1,4 @@
-import type { UrlReport } from "../types/UrlReport";
+import type { UrlReport } from "../types/url-report";
 
 type Props = {
   allSelected: boolean;

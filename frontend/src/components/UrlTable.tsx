@@ -1,8 +1,7 @@
 import { useState, useMemo } from "react";
-import UrlTableHeader from "./UrlTableHeader";
-import UrlTableRow from "./UrlTableRow";
-import type { UrlReport } from "../types/UrlReport";
-import { statusStyles } from "../helpers/statusStyle";
+import type { UrlReport } from "../types/url-report";
+import UrlMobileCard from "./UrlMobileCard";
+import UrlDesktopTable from "./UrlDesktopTable";
 
 type Props = {
   urls: UrlReport[];
@@ -34,7 +33,7 @@ export default function UrlTable({
   };
 
   const sortedUrls = useMemo(() => {
-    if (!sortKey) return [...urls]; // no mutation
+    if (!sortKey) return [...urls];
 
     return [...urls].sort((a, b) => {
       const aVal = a[sortKey];
@@ -54,126 +53,35 @@ export default function UrlTable({
 
   return (
     <>
-      {/* Desktop Table */}
-      <div className="hidden sm:block w-full min-h-[80svh] overflow-x-auto rounded-lg border border-gray-200 bg-white shadow">
-        <table className="min-w-[1200px] text-sm">
-          <thead className="bg-gray-100 text-left">
-            <UrlTableHeader
-              allSelected={
-                selectedIds.length === allUrls.length && allUrls.length > 0
-              }
-              onSelectAll={onSelectAll}
-              sortKey={sortKey}
-              sortDirection={sortDirection}
-              onSort={handleSort}
-            />
-          </thead>
-          <tbody>
-            {sortedUrls.length > 0 ? (
-              sortedUrls.map((url) => (
-                <UrlTableRow
-                  key={url.ID}
-                  url={url}
-                  selected={selectedIds.includes(url.ID)}
-                  onSelect={() => onSelect(url.ID)}
-                  onCrawl={() => onCrawl(url.ID)}
-                />
-              ))
-            ) : (
-              <tr>
-                <td
-                  colSpan={16}
-                  className="text-center px-4 py-10 text-gray-500"
-                >
-                  No results found.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+      <UrlDesktopTable
+        urls={sortedUrls}
+        allUrls={allUrls}
+        selectedIds={selectedIds}
+        sortKey={sortKey}
+        sortDirection={sortDirection}
+        onSelect={onSelect}
+        onSelectAll={onSelectAll}
+        onCrawl={onCrawl}
+        onSort={handleSort}
+      />
 
       {/* Mobile Cards */}
       <div className="sm:hidden space-y-4">
-        {sortedUrls.length === 0 && (
+        {sortedUrls.length === 0 ? (
           <div className="text-center text-gray-500 py-10">
             No results found.
           </div>
-        )}
-
-        {sortedUrls.map((url) => {
-          const status = url.status as keyof typeof statusStyles;
-          const buttonColor = statusStyles[status]?.buttonColor ?? "";
-          const buttonText = statusStyles[status]?.buttonText ?? "Retry";
-
-          return (
-            <div
+        ) : (
+          sortedUrls.map((url) => (
+            <UrlMobileCard
               key={url.ID}
-              className={`p-4 border border-gray-200 rounded shadow bg-white ${
-                selectedIds.includes(url.ID) ? "ring-2 ring-blue-500" : ""
-              }`}
-              onClick={() => onSelect(url.ID)}
-            >
-              <div className="flex items-center justify-between mb-2">
-                <input
-                  type="checkbox"
-                  checked={selectedIds.includes(url.ID)}
-                  onChange={() => onSelect(url.ID)}
-                  className="mr-2"
-                  onClick={(e) => e.stopPropagation()}
-                />
-                <span
-                  className="font-semibold truncate max-w-[70%]"
-                  title={url.url}
-                >
-                  {url.url}
-                </span>
-                <span
-                  className={`px-2 py-0.5 rounded text-xs font-medium ${
-                    url.status === "pending"
-                      ? "bg-yellow-200 text-yellow-800"
-                      : url.status === "done"
-                      ? "bg-green-200 text-green-800"
-                      : "bg-gray-200 text-gray-600"
-                  }`}
-                >
-                  {url.status}
-                </span>
-              </div>
-
-              {url.title && (
-                <div
-                  className="text-gray-700 text-sm mb-1 truncate"
-                  title={url.title}
-                >
-                  {url.title}
-                </div>
-              )}
-
-              <div className="text-xs text-gray-500 flex flex-wrap gap-2">
-                <div>H1: {url.h1_count}</div>
-                <div>H2: {url.h2_count}</div>
-                <div>H3: {url.h3_count}</div>
-                <div>H4: {url.h4_count}</div>
-                <div>H5: {url.h5_count}</div>
-                <div>H6: {url.h6_count}</div>
-                <div>Internal: {url.internal_links}</div>
-                <div>Broken: {url.broken_links}</div>
-                <div>
-                  <button
-                    className={`px-3 py-2 rounded-2xl border transition-colors ${buttonColor}`}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onCrawl(url.ID);
-                    }}
-                  >
-                    {buttonText}
-                  </button>
-                </div>
-              </div>
-            </div>
-          );
-        })}
+              url={url}
+              selected={selectedIds.includes(url.ID)}
+              onSelect={() => onSelect(url.ID)}
+              onCrawl={() => onCrawl(url.ID)}
+            />
+          ))
+        )}
       </div>
     </>
   );

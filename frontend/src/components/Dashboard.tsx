@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import type { UrlReport } from "../types/UrlReport";
+import type { UrlReport } from "../types/url-report";
 import DashboardToolbar from "./DashboardToolbar";
 import UrlTable from "./UrlTable";
 import PaginationControls from "./PaginationControls";

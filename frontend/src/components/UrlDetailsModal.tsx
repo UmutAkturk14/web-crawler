@@ -1,7 +1,7 @@
 // components/UrlDetailsModal.tsx
 
-import { useEffect, useState } from "react";
-import type { UrlReport } from "../types/UrlReport";
+import { useEffect, useState, useRef } from "react";
+import type { UrlReport } from "../types/url-report";
 import { Doughnut } from "react-chartjs-2";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
 
@@ -15,6 +15,14 @@ type Props = {
 export default function UrlDetailsModal({ urlId, onClose }: Props) {
   const [data, setData] = useState<UrlReport | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  const handleOverlayClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (modalRef.current && !modalRef.current.contains(e.target as Node)) {
+      onClose();
+    }
+  };
 
   useEffect(() => {
     const fetchUrlDetails = async () => {
@@ -47,7 +55,7 @@ export default function UrlDetailsModal({ urlId, onClose }: Props) {
   if (loading) {
     return (
       <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
-        <div className="bg-white p-6 rounded-xl shadow-lg text-lg">
+        <div className="bg-white p-6 rounded-xl shadow-lg text-base sm:text-lg">
           Loading...
         </div>
       </div>
@@ -62,7 +70,7 @@ export default function UrlDetailsModal({ urlId, onClose }: Props) {
       {
         label: "Links Distribution",
         data: [data.internal_links, data.external_links],
-        backgroundColor: ["#3b82f6", "#ef4444"], // blue and red
+        backgroundColor: ["#3b82f6", "#ef4444"],
         hoverBackgroundColor: ["#2563eb", "#dc2626"],
         borderWidth: 1,
       },
@@ -70,67 +78,71 @@ export default function UrlDetailsModal({ urlId, onClose }: Props) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 overflow-auto p-4">
-      <div className="bg-white w-full max-w-5xl p-8 rounded-2xl shadow-2xl relative">
+    <div
+      className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50 overflow-auto p-4 sm:p-6"
+      onClick={handleOverlayClick}
+    >
+      <div
+        ref={modalRef}
+        className="bg-white w-full max-w-5xl p-4 sm:p-6 md:p-8 rounded-2xl shadow-2xl relative mt-48"
+        onClick={(e) => e.stopPropagation()}
+      >
         <button
           onClick={onClose}
-          className="absolute top-4 right-6 text-gray-400 hover:text-red-500 text-3xl font-bold"
+          className="fixed sm:static top-4 right-4 text-gray-400 hover:text-red-500 text-2xl sm:text-3xl font-bold"
           aria-label="Close modal"
         >
           ×
         </button>
 
-        <h2 className="text-3xl font-bold mb-6 border-b pb-2">
-          URL Details (ID: {data.ID})
-        </h2>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-          <div>
-            <h3 className="text-xl font-semibold mb-4 text-gray-700">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mt-[65svh] md:gap-8 md:mt-4">
+          <div className="flex flex-col justify-center items-center">
+            <h2 className="text-2xl sm:text-3xl font-bold border-b pb-2">
+              URL Details (ID: {data.ID})
+            </h2>
+            <h3 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-gray-700 text-center">
               Internal vs External Links
             </h3>
-            <Doughnut data={chartData} />
+            <div className="w-full max-w-xs">
+              <Doughnut data={chartData} />
+            </div>
           </div>
 
           <div>
-            <h3 className="text-xl font-semibold mb-4 text-gray-700">
+            <h3 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-gray-700">
               Broken Links ({data.broken_links})
             </h3>
-            {data.broken_links_list && data.broken_links_list.length > 0 ? (
-              <ul className="max-h-64 overflow-y-auto border rounded-md p-4 bg-gray-50 shadow-inner">
-                {data.broken_links_list.map(({ url, status_code }, idx) => (
+            {data.broken_links_details &&
+            data.broken_links_details.length > 0 ? (
+              <ul className="max-h-52 overflow-y-auto border rounded-md p-3 sm:p-4 bg-gray-50 shadow-inner text-sm sm:text-base">
+                {data.broken_links_details.map(({ link }, idx) => (
                   <li
                     key={idx}
-                    className="mb-2 last:mb-0 break-words"
-                    title={url}
+                    className="mb-2 last:mb-0 break-words truncate"
+                    title={link}
                   >
+                    —{" "}
                     <a
-                      href={url}
+                      href={link}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-blue-600 underline"
                     >
-                      {url}
-                    </a>{" "}
-                    —{" "}
-                    <span
-                      className={`font-semibold ${
-                        status_code >= 400 ? "text-red-600" : "text-yellow-600"
-                      }`}
-                    >
-                      {status_code}
-                    </span>
+                      {link}
+                    </a>
                   </li>
                 ))}
               </ul>
             ) : (
-              <p className="text-gray-500">No broken links detected.</p>
+              <p className="text-gray-500 text-sm sm:text-base">
+                No broken links detected.
+              </p>
             )}
           </div>
         </div>
 
         {/* Rest of the details */}
-        <div className="grid grid-cols-2 gap-6 text-sm">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mt-6 text-sm">
           <Section title="Title" content={data.title} />
           <Section
             title="URL"
@@ -175,7 +187,7 @@ function Section({
   content: React.ReactNode;
 }) {
   return (
-    <div className="bg-gray-50 p-4 rounded-lg shadow-sm border">
+    <div className="bg-gray-50 p-3 sm:p-4 rounded-lg shadow-sm border">
       <div className="text-xs font-semibold text-gray-500 uppercase mb-1">
         {title}
       </div>

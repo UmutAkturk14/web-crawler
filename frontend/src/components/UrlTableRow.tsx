@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { UrlReport } from "../types/UrlReport";
+import type { UrlReport } from "../types/url-report";
 import { statusStyles } from "../helpers/statusStyle";
 import UrlDetailsModal from "./UrlDetailsModal";
 
@@ -41,7 +41,17 @@ export default function UrlTableRow({
     <>
       <tr
         className={`transition cursor-default ${bgColor}`}
-        onClick={handlePopUp}
+        onClick={(e) => {
+          // Prevent modal from opening if the click came from checkbox
+          const target = e.target as HTMLElement;
+          if (
+            target.closest("input[type='checkbox']") ||
+            target.closest("button")
+          ) {
+            return;
+          }
+          handlePopUp();
+        }}
       >
         <td className="px-4 py-3">
           <input
@@ -51,7 +61,6 @@ export default function UrlTableRow({
               e.stopPropagation();
               onSelect();
             }}
-            onClick={(e) => e.stopPropagation()}
           />
         </td>
         <td className="px-4 py-3">{url.ID}</td>

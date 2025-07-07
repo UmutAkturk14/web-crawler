@@ -1,6 +1,6 @@
 import { useState } from "react";
 import axios from "axios";
-import type { UrlReport } from "../types/UrlReport";
+import type { UrlReport } from "../types/url-report";
 
 type Props = {
   searchTerm: string;
