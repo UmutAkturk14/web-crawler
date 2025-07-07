@@ -3,6 +3,7 @@ import axios from "axios";
 import type { UrlReport } from "../types/UrlReport";
 import DashboardToolbar from "./DashboardToolbar";
 import UrlTable from "./UrlTable";
+import PaginationControls from "./PaginationControls";
 
 export default function Dashboard() {
   const [urls, setUrls] = useState<UrlReport[]>([]);
@@ -166,52 +167,16 @@ export default function Dashboard() {
           selectedIds={selectedIds}
           onSelect={handleSelect}
           onSelectAll={handleSelectAll}
-          onCrawl={triggerCrawlAndUpdate} // pass it down
+          onCrawl={triggerCrawlAndUpdate}
         />
 
-        {/* Pagination Controls */}
-        <div className="flex items-center justify-between mt-4 space-x-4">
-          <div>
-            <button
-              onClick={() => setPage((p) => Math.max(p - 1, 1))}
-              disabled={page === 1}
-              className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
-            >
-              Previous
-            </button>
-            <span className="mx-2">
-              Page {page} / {totalPages}
-            </span>
-            <button
-              onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
-              disabled={page === totalPages}
-              className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
-            >
-              Next
-            </button>
-          </div>
-
-          <div className="flex items-center space-x-2">
-            <label htmlFor="pageSize" className="font-medium">
-              Items per page:
-            </label>
-            <select
-              id="pageSize"
-              value={pageSize}
-              onChange={(e) => {
-                setPageSize(Number(e.target.value));
-                setPage(1);
-              }}
-              className="border border-gray-300 rounded px-2 py-1"
-            >
-              {[5, 10, 25, 50].map((size) => (
-                <option key={size} value={size}>
-                  {size}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
+        <PaginationControls
+          page={page}
+          totalPages={totalPages}
+          pageSize={pageSize}
+          setPage={setPage}
+          setPageSize={setPageSize}
+        />
       </div>
     </div>
   );
