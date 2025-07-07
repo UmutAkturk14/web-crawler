@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/UmutAkturk14/web-crawler/backend/internal/analyzer"
+	"github.com/UmutAkturk14/web-crawler/backend/internal/middleware"
 	"github.com/UmutAkturk14/web-crawler/backend/internal/models"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -195,47 +196,47 @@ func RegisterURLRoutes(r *gin.Engine, db *gorm.DB) {
 		})
 	})
 
-r.GET("/url/:id", func(c *gin.Context) {
-	idParam := c.Param("id")
-	id, err := strconv.Atoi(idParam)
-	if err != nil || id <= 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID"})
-		return
-	}
-
-	var urlEntry models.URL
-	// Preload BrokenLinksDetails to fetch associated broken links
-	if err := db.Preload("BrokenLinksDetails").First(&urlEntry, id).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			c.JSON(http.StatusNotFound, gin.H{"error": "Record not found"})
-		} else {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	r.GET("/url/:id", func(c *gin.Context) {
+		idParam := c.Param("id")
+		id, err := strconv.Atoi(idParam)
+		if err != nil || id <= 0 {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID"})
+			return
 		}
-		return
-	}
 
-	response := models.URLResponse{
-		ID:               urlEntry.ID,
-		URL:              urlEntry.URL,
-		Status:           urlEntry.Status,
-		Title:            urlEntry.Title,
-		HTMLVersion:      urlEntry.HTMLVersion,
-		H1Count:          urlEntry.H1Count,
-		H2Count:          urlEntry.H2Count,
-		H3Count:          urlEntry.H3Count,
-		H4Count:          urlEntry.H4Count,
-		H5Count:          urlEntry.H5Count,
-		H6Count:          urlEntry.H6Count,
-		InternalLinks:    urlEntry.InternalLinks,
-		ExternalLinks:    urlEntry.ExternalLinks,
-		BrokenLinks:      urlEntry.BrokenLinks,
-		HasLoginForm:     urlEntry.LoginFormFound,
-		CreatedAt:        urlEntry.CreatedAt,
-		BrokenLinksDetails: urlEntry.BrokenLinksDetails,  // Added here
-	}
+		var urlEntry models.URL
+		// Preload BrokenLinksDetails to fetch associated broken links
+		if err := db.Preload("BrokenLinksDetails").First(&urlEntry, id).Error; err != nil {
+			if err == gorm.ErrRecordNotFound {
+				c.JSON(http.StatusNotFound, gin.H{"error": "Record not found"})
+			} else {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			}
+			return
+		}
 
-	c.JSON(http.StatusOK, response)
-})
+		response := models.URLResponse{
+			ID:               urlEntry.ID,
+			URL:              urlEntry.URL,
+			Status:           urlEntry.Status,
+			Title:            urlEntry.Title,
+			HTMLVersion:      urlEntry.HTMLVersion,
+			H1Count:          urlEntry.H1Count,
+			H2Count:          urlEntry.H2Count,
+			H3Count:          urlEntry.H3Count,
+			H4Count:          urlEntry.H4Count,
+			H5Count:          urlEntry.H5Count,
+			H6Count:          urlEntry.H6Count,
+			InternalLinks:    urlEntry.InternalLinks,
+			ExternalLinks:    urlEntry.ExternalLinks,
+			BrokenLinks:      urlEntry.BrokenLinks,
+			HasLoginForm:     urlEntry.LoginFormFound,
+			CreatedAt:        urlEntry.CreatedAt,
+			BrokenLinksDetails: urlEntry.BrokenLinksDetails,  // Added here
+		}
+
+		c.JSON(http.StatusOK, response)
+	})
 
 
 	r.DELETE("/url/:id", func(c *gin.Context) {
@@ -317,4 +318,35 @@ r.GET("/url/:id", func(c *gin.Context) {
 
 		c.JSON(http.StatusOK, response)
 	})
+
+	urlGroup := r.Group("/").Use(middleware.AuthMiddleware())
+
+	urlGroup.GET("/urls-protected", func(c *gin.Context) {
+		var urls []models.URL
+		if err := db.Find(&urls).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch URLs"})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{"urls": urls})
+	})
+
+	// Group with Auth Middleware for testing
+  authGroup := r.Group("/auth").Use(middleware.AuthMiddleware())
+
+  // Simple test route to check if authentication passed
+   authGroup.GET("/ping", func(c *gin.Context) {
+      // You can get user info from context if your middleware sets it, e.g.:
+      // user, _ := c.Get("user")
+      c.JSON(http.StatusOK, gin.H{"message": "pong", "auth": "success"})
+  })
+
+  // Route to test access to protected resource
+  authGroup.GET("/secret-data", func(c *gin.Context) {
+      // Example protected data
+      secretData := map[string]interface{}{
+          "confidential": "The launch code is 12345",
+          "user":         c.GetString("user"), // assuming middleware sets "user"
+      }
+      c.JSON(http.StatusOK, secretData)
+  })
 }

@@ -20,5 +20,5 @@ type URLResponse struct {
 	HasLoginForm      bool          `json:"has_login_form"`
 	CreatedAt         time.Time     `json:"created_at"`
 
-	BrokenLinksDetails []BrokenLink `json:"broken_links_details,omitempty"` // Add this line
+	BrokenLinksDetails []BrokenLink `json:"broken_links_details,omitempty"`
 }

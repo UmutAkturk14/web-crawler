@@ -1,6 +1,7 @@
 package helpers
 
 import (
+	"net/url"
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
@@ -12,27 +13,36 @@ func DetectHTMLVersion() string {
 }
 
 func CountLinks(doc *goquery.Document, baseURL string) (int, int) {
-    internal := 0
-    external := 0
+	internal := 0
+	external := 0
 
-    doc.Find("a[href]").Each(func(i int, s *goquery.Selection) {
-        href, _ := s.Attr("href")
-        href = strings.TrimSpace(href)
-        if href == "" || href == "#" {
-            return
-        }
-        if strings.HasPrefix(href, "http") {
-            if strings.HasPrefix(href, baseURL) {
-                internal++
-            } else {
-                external++
-            }
-        } else {
-            internal++
-        }
-    })
+	base, err := url.Parse(baseURL)
+	if err != nil {
+		return 0, 0 // or handle error properly
+	}
 
-    return internal, external
+	doc.Find("a[href]").Each(func(i int, s *goquery.Selection) {
+		href, exists := s.Attr("href")
+		if !exists || strings.TrimSpace(href) == "" || href == "#" {
+			return
+		}
+
+		parsedHref, err := url.Parse(href)
+		if err != nil {
+			return
+		}
+
+		// Resolve relative URLs
+		absURL := base.ResolveReference(parsedHref)
+
+		if absURL.Host == base.Host {
+			internal++
+		} else {
+			external++
+		}
+	})
+
+	return internal, external
 }
 
 func HasLoginForm(doc *goquery.Document) bool {

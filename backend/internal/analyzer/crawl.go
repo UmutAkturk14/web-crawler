@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"strconv"
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
@@ -75,15 +74,9 @@ func CrawlURL(db *gorm.DB, urlEntry *models.URL) error {
 	// Convert helper results to model broken links
 	var brokenLinks []models.BrokenLink
 	for _, res := range linkCheckResults {
-		statusCode, err := strconv.Atoi(res.Status)
-		if err != nil {
-			// if status is not a valid number, you can assign 0 or some sentinel value
-			statusCode = 0
-		}
 		brokenLinks = append(brokenLinks, models.BrokenLink{
 			URLID:      urlEntry.ID,
 			Link:       res.URL,
-			StatusCode: statusCode,
 		})
 	}
 	fmt.Println("Converted broken links count:", len(brokenLinks))
