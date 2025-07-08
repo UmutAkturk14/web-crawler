@@ -10,48 +10,51 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// Secret key (replace with env var or config in production)
-var JwtSecret = []byte("your_secret_key")
+var JwtSecret = []byte("your_secret_key") // 🔐 Replace with env var in production
 
-// AuthMiddleware checks the Authorization header for a valid JWT token
+const bearerSchema = "Bearer"
+
+// Claims defines custom JWT claims (can be extended later)
+type Claims struct {
+	UserID string `json:"user_id"`
+	jwt.StandardClaims
+}
+
+// AuthMiddleware validates JWT and sets claims into context
 func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Missing auth token"})
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Missing Authorization header"})
 			c.Abort()
 			return
 		}
 
-		parts := strings.Split(authHeader, " ")
-		if len(parts) != 2 || parts[0] != "Bearer" {
+		parts := strings.SplitN(authHeader, " ", 2)
+		if len(parts) != 2 || parts[0] != bearerSchema {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization header format must be Bearer {token}"})
 			c.Abort()
 			return
 		}
 
-		tokenString := parts[1]
-		fmt.Println("Received token:", tokenString)
-
-		claims, err := validateToken(tokenString)
+		tokenStr := parts[1]
+		claims, err := validateToken(tokenStr)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 			c.Abort()
 			return
 		}
 
-		// Optionally: store claims in context if needed later in handlers
-		c.Set("userClaims", claims)
+		// Set user info in context
+		c.Set("userID", claims.Subject)
 		c.Next()
 	}
 }
 
 // validateToken parses and validates the JWT token and returns claims
 func validateToken(tokenStr string) (*jwt.StandardClaims, error) {
-	fmt.Println("Validating token:", tokenStr)
-
 	token, err := jwt.ParseWithClaims(tokenStr, &jwt.StandardClaims{}, func(token *jwt.Token) (interface{}, error) {
-		// Ensure the signing method is HMAC
+		// Validate the alg is what we expect
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
@@ -59,7 +62,7 @@ func validateToken(tokenStr string) (*jwt.StandardClaims, error) {
 	})
 
 	if err != nil {
-		return nil, fmt.Errorf("token parse error: %v", err)
+		return nil, fmt.Errorf("invalid token: %v", err)
 	}
 
 	claims, ok := token.Claims.(*jwt.StandardClaims)
@@ -74,11 +77,12 @@ func validateToken(tokenStr string) (*jwt.StandardClaims, error) {
 	return claims, nil
 }
 
+// GenerateJWT generates a JWT token for a given userID
 func GenerateJWT(userID uint) (string, error) {
 	claims := jwt.StandardClaims{
 		ExpiresAt: time.Now().Add(24 * time.Hour).Unix(),
 		IssuedAt:  time.Now().Unix(),
-		Subject:   fmt.Sprint(userID),
+		Subject:   fmt.Sprint(userID), // User ID stored as Subject
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)

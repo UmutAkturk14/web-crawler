@@ -51,16 +51,14 @@ func main() {
 	r.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"http://localhost:8088"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowHeaders:     []string{"Origin", "Content-Type", "Accept"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: true,
 		MaxAge:           12 * time.Hour,
 	}))
 
 	routes.RegisterAuthRoutes(r, db)
-
-	// Register URL-related routes
 	routes.RegisterURLRoutes(r, db)
 
-	r.Run() // listen and serve on 0.0.0.0:8080
+	r.Run()
 }
