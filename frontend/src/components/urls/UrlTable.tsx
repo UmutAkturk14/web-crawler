@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import type { UrlReport } from "../types/url-report";
+import type { UrlReport } from "../../types/url-report";
 import UrlMobileCard from "./UrlMobileCard";
 import UrlDesktopTable from "./UrlDesktopTable";
 

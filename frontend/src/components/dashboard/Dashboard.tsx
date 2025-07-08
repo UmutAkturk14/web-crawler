@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import type { UrlReport } from "../types/url-report";
+import type { UrlReport } from "../../types/url-report";
 import DashboardToolbar from "./DashboardToolbar";
-import UrlTable from "./UrlTable";
+import UrlTable from "../urls/UrlTable";
 import PaginationControls from "./PaginationControls";
+import { useCallback } from "react";
 
 export default function Dashboard({ onLogout }: { onLogout: () => void }) {
   const [urls, setUrls] = useState<UrlReport[]>([]);
@@ -16,11 +17,7 @@ export default function Dashboard({ onLogout }: { onLogout: () => void }) {
     Record<number, AbortController>
   >({});
 
-  useEffect(() => {
-    fetchUrls();
-  }, [page, pageSize]);
-
-  const fetchUrls = async () => {
+  const fetchUrls = useCallback(async () => {
     try {
       const token = localStorage.getItem("authToken");
       console.log(`Bearer ${token}`);
@@ -47,7 +44,11 @@ export default function Dashboard({ onLogout }: { onLogout: () => void }) {
     } catch (error) {
       console.error("Failed to fetch URLs:", error);
     }
-  };
+  }, [page, pageSize]);
+
+  useEffect(() => {
+    fetchUrls();
+  }, [fetchUrls]);
 
   const triggerCrawlAndUpdate = async (id: number) => {
     if (runningCrawls[id]) {

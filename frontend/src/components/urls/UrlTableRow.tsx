@@ -1,6 +1,6 @@
 import { useState } from "react";
-import type { UrlReport } from "../types/url-report";
-import { statusStyles } from "../helpers/statusStyle";
+import type { UrlReport } from "../../types/url-report";
+import { statusStyles } from "../../helpers/statusStyle";
 import UrlDetailsModal from "./UrlDetailsModal";
 
 type Props = {

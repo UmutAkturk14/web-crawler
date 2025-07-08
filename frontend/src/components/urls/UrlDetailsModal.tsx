@@ -1,7 +1,7 @@
 // components/UrlDetailsModal.tsx
 
 import { useEffect, useState, useRef } from "react";
-import type { UrlReport } from "../types/url-report";
+import type { UrlReport } from "../../types/url-report";
 import { Doughnut } from "react-chartjs-2";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
 
