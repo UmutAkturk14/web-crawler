@@ -22,12 +22,19 @@ export default function Dashboard({ onLogout }: { onLogout: () => void }) {
 
   const fetchUrls = async () => {
     try {
+      const token = localStorage.getItem("authToken");
+      console.log(`Bearer ${token}`);
+
       const response = await axios.get<{
         page: number;
         page_size: number;
         total_count: number;
         urls: UrlReport[];
-      }>(`http://localhost:8080/urls?page=${page}&page_size=${pageSize}`);
+      }>(`http://localhost:8080/urls?page=${page}&page_size=${pageSize}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       const data = response.data.urls;
       setUrls(data);
@@ -43,7 +50,6 @@ export default function Dashboard({ onLogout }: { onLogout: () => void }) {
   };
 
   const triggerCrawlAndUpdate = async (id: number) => {
-    // If already running, cancel instead
     if (runningCrawls[id]) {
       runningCrawls[id].abort();
       setRunningCrawls((prev) => {
@@ -60,10 +66,17 @@ export default function Dashboard({ onLogout }: { onLogout: () => void }) {
     setStatus(id, "running");
 
     try {
+      const token = localStorage.getItem("authToken");
+
       const response = await axios.post<UrlReport>(
         `http://localhost:8080/crawl/${id}`,
         {},
-        { signal: controller.signal }
+        {
+          signal: controller.signal,
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
 
       const updatedUrl = response.data;
@@ -118,9 +131,18 @@ export default function Dashboard({ onLogout }: { onLogout: () => void }) {
     if (!confirmed) return;
 
     try {
+      const token = localStorage.getItem("authToken");
+
       await Promise.all(
-        selectedIds.map((id) => axios.delete(`http://localhost:8080/url/${id}`))
+        selectedIds.map((id) =>
+          axios.delete(`http://localhost:8080/url/${id}`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          })
+        )
       );
+
       await fetchUrls(); // refresh the list after deletion
       setSelectedIds([]); // clear selection
     } catch (error) {

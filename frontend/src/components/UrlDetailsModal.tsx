@@ -27,8 +27,18 @@ export default function UrlDetailsModal({ urlId, onClose }: Props) {
   useEffect(() => {
     const fetchUrlDetails = async () => {
       try {
-        const res = await fetch(`http://localhost:8080/url/${urlId}`);
+        const token = localStorage.getItem("authToken"); // get the token
+
+        const res = await fetch(`http://localhost:8080/url/${urlId}`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`, // include the token
+          },
+        });
+
         if (!res.ok) throw new Error("Failed to fetch");
+
         const json = await res.json();
         setData(json);
       } catch (error) {
@@ -37,7 +47,6 @@ export default function UrlDetailsModal({ urlId, onClose }: Props) {
         setLoading(false);
       }
     };
-
     fetchUrlDetails();
   }, [urlId]);
 
