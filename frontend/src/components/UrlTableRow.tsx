@@ -35,6 +35,15 @@ export default function UrlTableRow({
     buttonText: "Retry",
   };
 
+  const statusButtonStyle =
+    {
+      pending: "bg-gradient-to-r from-yellow-400 to-yellow-600 text-white",
+      running: "bg-gradient-to-r from-blue-400 to-blue-600 text-white",
+      done: "bg-gradient-to-r from-green-400 to-green-600 text-white",
+      error: "bg-gradient-to-r from-red-500 to-red-700 text-white",
+      queued: "bg-gradient-to-r from-gray-400 to-gray-600 text-white",
+    }[url.status] || "bg-gradient-to-r from-gray-400 to-gray-600 text-white";
+
   const { buttonColor, bgColor, buttonText } = currentStatus;
 
   return (
@@ -78,7 +87,13 @@ export default function UrlTableRow({
           </a>
         </td>
 
-        <td className="px-4 py-3">{url.status}</td>
+        <td className="px-4 py-3">
+          <div
+            className={`flex justify-center items-center p-1 capitalize font-bold rounded-lg px-3 ${statusButtonStyle}`}
+          >
+            {url.status}
+          </div>
+        </td>
         <td className="px-4 py-3">{url.html_version}</td>
         <td className="px-4 py-3">{url.h1_count}</td>
         <td className="px-4 py-3">{url.h2_count}</td>
