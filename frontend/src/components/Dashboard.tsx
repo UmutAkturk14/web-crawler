@@ -5,7 +5,7 @@ import DashboardToolbar from "./DashboardToolbar";
 import UrlTable from "./UrlTable";
 import PaginationControls from "./PaginationControls";
 
-export default function Dashboard() {
+export default function Dashboard({ onLogout }: { onLogout: () => void }) {
   const [urls, setUrls] = useState<UrlReport[]>([]);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -159,6 +159,7 @@ export default function Dashboard() {
           onReanalyze={handleBulkReanalyze}
           disabled={selectedIds.length === 0}
           onUrlAdded={fetchUrls}
+          onLogout={onLogout}
         />
 
         <UrlTable
