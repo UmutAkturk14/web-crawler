@@ -57,10 +57,7 @@ func main() {
 		MaxAge:           12 * time.Hour,
 	}))
 
-	// Healthcheck
-	r.GET("/ping", func(c *gin.Context) {
-		c.JSON(200, gin.H{"message": "pong"})
-	})
+	routes.RegisterAuthRoutes(r, db)
 
 	// Register URL-related routes
 	routes.RegisterURLRoutes(r, db)
