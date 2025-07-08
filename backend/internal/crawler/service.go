@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
-	"github.com/UmutAkturk14/web-crawler/backend/internal/helpers"
+	"github.com/UmutAkturk14/web-crawler/backend/internal/linkcheck"
 	"github.com/UmutAkturk14/web-crawler/backend/internal/models"
 	"gorm.io/gorm"
 )
@@ -36,7 +36,7 @@ func CrawlURL(db *gorm.DB, urlEntry *models.URL) error {
 	}
 	fmt.Println("Parsed HTML document successfully")
 
-	urlEntry.HTMLVersion = helpers.DetectHTMLVersion()
+	urlEntry.HTMLVersion = linkcheck.DetectHTMLVersion()
 	fmt.Println("Detected HTML version:", urlEntry.HTMLVersion)
 
 	urlEntry.Title = strings.TrimSpace(doc.Find("title").Text())
@@ -52,19 +52,19 @@ func CrawlURL(db *gorm.DB, urlEntry *models.URL) error {
 		urlEntry.H1Count, urlEntry.H2Count, urlEntry.H3Count,
 		urlEntry.H4Count, urlEntry.H5Count, urlEntry.H6Count)
 
-	internalLinks, externalLinks := helpers.CountLinks(doc, urlEntry.URL)
+	internalLinks, externalLinks := linkcheck.CountLinks(doc, urlEntry.URL)
 	urlEntry.InternalLinks = internalLinks
 	urlEntry.ExternalLinks = externalLinks
 	fmt.Println("Counted links - internal:", internalLinks, "external:", externalLinks)
 
-	urlEntry.LoginFormFound = helpers.HasLoginForm(doc)
+	urlEntry.LoginFormFound = linkcheck.HasLoginForm(doc)
 	fmt.Println("Login form found:", urlEntry.LoginFormFound)
 
-	allLinks := helpers.ExtractAllLinks(doc, urlEntry.URL)
+	allLinks := linkcheck.ExtractAllLinks(doc, urlEntry.URL)
 	fmt.Println("Extracted total links for broken link check:", len(allLinks))
 
 	// Check broken links
-	linkCheckResults, err := helpers.CheckBrokenLinks(allLinks)
+	linkCheckResults, err := linkcheck.CheckBrokenLinks(allLinks)
 	if err != nil {
 		fmt.Println("Warning: error during broken links check:", err)
 	} else {

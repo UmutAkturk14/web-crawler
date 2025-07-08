@@ -3,7 +3,7 @@ package routes
 import (
 	"net/http"
 
-	"github.com/UmutAkturk14/web-crawler/backend/internal/middleware"
+	"github.com/UmutAkturk14/web-crawler/backend/internal/auth"
 	"github.com/UmutAkturk14/web-crawler/backend/internal/models"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -25,7 +25,7 @@ func RegisterAuthRoutes(r *gin.Engine, db *gorm.DB) {
 			return
 		}
 
-		hashedPassword, err := middleware.HashPassword(req.Password)
+		hashedPassword, err := auth.HashPassword(req.Password)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to hash password"})
 			return
@@ -58,13 +58,12 @@ authGroup.POST("/login", func(c *gin.Context) {
 		return
 	}
 
-	if !middleware.CheckPasswordHash(req.Password, user.PasswordHash) {
+	if !auth.CheckPasswordHash(req.Password, user.PasswordHash) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
 		return
 	}
-
 	// Generate JWT token using your middleware function
-	token, err := middleware.GenerateJWT(uint(user.ID))
+	token, err := auth.GenerateJWT(uint(user.ID))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
 		return
