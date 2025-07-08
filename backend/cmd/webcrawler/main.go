@@ -20,9 +20,18 @@ import (
 var db *gorm.DB
 
 func main() {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
+	// Load .env only if the file exists (useful for local dev, not needed in Docker)
+	envFile := ".env"
+	if _, err := os.Stat(".env.local"); err == nil {
+		envFile = ".env.local"
+	}
+
+	if _, err := os.Stat(envFile); err == nil {
+		if err := godotenv.Load(envFile); err != nil {
+			log.Printf("Warning: error loading %s file: %v", envFile, err)
+		}
+	} else {
+		log.Printf("%s file not found, skipping loading env vars from file", envFile)
 	}
 
 	user := os.Getenv("DB_USER")
@@ -35,12 +44,13 @@ func main() {
 		user, pass, host, port, dbname)
 	fmt.Println("MySQL DSN:", dsn)
 
+	var err error
 	db, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
 		log.Fatal("Failed to connect to database:", err)
 	}
 
-	err = db.AutoMigrate(&models.URL{}, &models.BrokenLink{})
+	err = db.AutoMigrate(&models.User{}, &models.URL{}, &models.BrokenLink{})
 	if err != nil {
 		log.Fatal("Database migration failed:", err)
 	}

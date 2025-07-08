@@ -1,0 +1,14 @@
+# Go build artifacts
+/bin/
+/build/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+
+# Other
+.env
+node_modules
+.git
