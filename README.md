@@ -10,7 +10,6 @@ This project is a full-stack web application built as part of a technical assess
 - **Backend:** Go (Gin framework)
 - **Database:** MySQL
 - **Containerization:** Docker & Docker Compose
-- **Testing:** Vitest + React Testing Library (frontend)
 
 ---
 
@@ -104,25 +103,11 @@ For demo purposes, the backend accepts a hardcoded or pre-generated JWT token (a
 
 ---
 
-## 🧪 Testing
-
-This project includes automated frontend tests covering key user flows (e.g., URL addition, dashboard display, and detail navigation).
-
-To run the tests:
-
-```bash
-cd frontend npm install npm run test
-```
-
----
-
 ## 🧬 Database
 
 - The project uses MySQL as the database engine.
 
 - Upon startup (via Docker or manually), the schema is automatically created.
-
-- You can find optional seed data or SQL init scripts under `/docker` if applicable.
 
 ---
 
