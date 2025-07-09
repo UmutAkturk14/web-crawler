@@ -20,20 +20,24 @@ import (
 var db *gorm.DB
 
 func main() {
-	// Load .env only if the file exists (useful for local dev, not needed in Docker)
+	// Determine which .env file to use
 	envFile := ".env"
 	if _, err := os.Stat(".env.local"); err == nil {
 		envFile = ".env.local"
 	}
 
-	if _, err := os.Stat(envFile); err == nil {
-		if err := godotenv.Load(envFile); err != nil {
-			log.Printf("Warning: error loading %s file: %v", envFile, err)
+	// Only load env file if not running inside Docker
+	if os.Getenv("DOCKERIZED") == "" {
+		if _, err := os.Stat(envFile); err == nil {
+			if err := godotenv.Load(envFile); err != nil {
+				log.Printf("Warning: error loading %s file: %v", envFile, err)
+			}
+		} else {
+			log.Printf("%s file not found, skipping loading env vars from file", envFile)
 		}
-	} else {
-		log.Printf("%s file not found, skipping loading env vars from file", envFile)
 	}
 
+	// Use environment variables (from file or docker-compose)
 	user := os.Getenv("DB_USER")
 	pass := os.Getenv("DB_PASSWORD")
 	host := os.Getenv("DB_HOST")
@@ -57,7 +61,7 @@ func main() {
 
 	r := gin.Default()
 
-	// ✅ Enable CORS for localhost:8088
+	// Enable CORS for localhost:8088
 	r.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"http://localhost:8088"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},

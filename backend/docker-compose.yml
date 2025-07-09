@@ -25,6 +25,7 @@ services:
     env_file:
       - ./.env
     restart: always
+    command: ["/wait-for-it.sh", "mysql", "3306", "--", "./webcrawler"]
 
 volumes:
   mysql_data:

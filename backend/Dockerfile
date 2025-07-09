@@ -1,35 +1,37 @@
-# syntax=docker/dockerfile:1
+# --- 1. Builder stage ---
+FROM golang:1.24-alpine as builder
 
-# --- 1. Base stage for building ---
-FROM golang:1.23-alpine AS builder
+RUN apk update && apk add --no-cache git upx
 
-# Install necessary packages
-RUN apk add --no-cache git
-
-# Set working directory
 WORKDIR /app
 
-# Copy go.mod and go.sum first (for caching)
-COPY go.mod go.sum ./
+COPY go.mod .
+COPY go.sum .
 RUN go mod download
 
-# Copy the entire backend source
+# Copy the entire source code
 COPY . .
 
-# Build the Go app
-RUN go build -o webcrawler ./cmd/webcrawler
+# Build the binary, optimize for size, and compress with upx
+RUN go build -ldflags="-s -w" -o webcrawler cmd/webcrawler/main.go
+RUN upx --best --ultra-brute webcrawler
 
 # --- 2. Final stage ---
 FROM alpine:latest
 
-# Set working directory
+# Install netcat for wait-for-it.sh to work
+RUN apk add --no-cache netcat-openbsd
+
+# Copy wait-for-it.sh script and make executable
+COPY wait-for-it.sh /wait-for-it.sh
+RUN chmod +x /wait-for-it.sh
+
 WORKDIR /root/
 
-# Copy the binary from builder
+# Copy the built binary from builder stage
 COPY --from=builder /app/webcrawler .
 
-# Expose application port (optional, in case you use it)
 EXPOSE 8080
 
-# Run the binary
+# Default command, can be overridden in docker-compose
 CMD ["./webcrawler"]
