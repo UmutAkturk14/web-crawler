@@ -29,13 +29,16 @@ export default function UrlDetailsModal({ urlId, onClose }: Props) {
       try {
         const token = localStorage.getItem("authToken"); // get the token
 
-        const res = await fetch(`http://localhost:8080/url/${urlId}`, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`, // include the token
-          },
-        });
+        const res = await fetch(
+          `${import.meta.env.VITE_API_URL}/url/${urlId}`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`, // include the token
+            },
+          }
+        );
 
         if (!res.ok) throw new Error("Failed to fetch");
 

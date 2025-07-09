@@ -27,7 +27,7 @@ export default function UrlDesktopTable({
 }: Props) {
   return (
     <div className="hidden sm:block w-full min-h-[80svh] overflow-x-auto rounded-lg border border-gray-200 bg-white shadow">
-      <table className="min-w-[1200px] text-sm">
+      <table className="w-full text-sm">
         <thead className="bg-gray-100 text-left">
           <UrlTableHeader
             allSelected={

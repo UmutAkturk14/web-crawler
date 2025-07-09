@@ -31,7 +31,7 @@ export default function DashboardToolbar({
     setIsSubmitting(true);
     try {
       const response = await axios.post(
-        "http://localhost:8080/urls",
+        `${import.meta.env.VITE_API_URL}/urls`,
         {
           url: newUrl.trim(),
         },

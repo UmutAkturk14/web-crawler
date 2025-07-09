@@ -16,6 +16,9 @@ export default function Dashboard({ onLogout }: { onLogout: () => void }) {
   const [runningCrawls, setRunningCrawls] = useState<
     Record<number, AbortController>
   >({});
+  const host = import.meta.env.VITE_API_URL;
+
+  console.log("Host URL:", host);
 
   const fetchUrls = useCallback(async () => {
     try {
@@ -27,7 +30,7 @@ export default function Dashboard({ onLogout }: { onLogout: () => void }) {
         page_size: number;
         total_count: number;
         urls: UrlReport[];
-      }>(`http://localhost:8080/urls?page=${page}&page_size=${pageSize}`, {
+      }>(`${host}/urls?page=${page}&page_size=${pageSize}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -70,7 +73,7 @@ export default function Dashboard({ onLogout }: { onLogout: () => void }) {
       const token = localStorage.getItem("authToken");
 
       const response = await axios.post<UrlReport>(
-        `http://localhost:8080/crawl/${id}`,
+        `${host}/crawl/${id}`,
         {},
         {
           signal: controller.signal,
@@ -136,7 +139,7 @@ export default function Dashboard({ onLogout }: { onLogout: () => void }) {
 
       await Promise.all(
         selectedIds.map((id) =>
-          axios.delete(`http://localhost:8080/url/${id}`, {
+          axios.delete(`${host}/url/${id}`, {
             headers: {
               Authorization: `Bearer ${token}`,
             },

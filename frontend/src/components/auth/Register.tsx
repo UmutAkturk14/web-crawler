@@ -16,11 +16,14 @@ const Register: React.FC<RegisterProps> = ({ onSuccess }) => {
     setLoading(true);
 
     try {
-      const res = await fetch("http://localhost:8080/auth/registration", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
+      const res = await fetch(
+        `${import.meta.env.VITE_API_URL}/auth/registration`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password }),
+        }
+      );
 
       if (!res.ok) {
         const data = await res.json();
