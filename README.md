@@ -58,54 +58,107 @@ This project is a full-stack web application built as part of a technical assess
 
 ## 🚀 Installation & Setup
 
-**Clone the repo**
+### **Clone the repo**
 
 ```bash
 gh repo clone UmutAkturk14/web-crawler
 ```
 
-**Add the environment variables (samples provided below)**
+### **Add environment variables**
 
-### Local
+Create `.env` files in the backend and frontend directories using the examples below:
 
-#### Back end
+#### Backend – `.env`
 
-**Fetch the dependencies**
+For Docker or shared environments:
+
+```.env
+DB_USER=myuser
+DB_PASSWORD=mypassword
+DB_HOST=mysql
+DB_PORT=3306
+DB_NAME=crawler
+```
+
+For local development (`.env.local`):
+
+```.env.local
+DB_USER=myuser
+DB_PASSWORD=mypassword
+DB_HOST=localhost
+DB_PORT=3306
+DB_NAME=crawler
+```
+
+#### Frontend – `.env`
+
+```.env
+VITE_API_URL=http://localhost:8080
+```
+
+---
+
+### Local Development
+
+#### Backend
+
+**Fetch Go dependencies**
 
 ```bash
 go mod download
 ```
 
-**Run the app**
+**Run the backend**
 
 ```bash
 go run cmd/webcrawler/main.go
 ```
 
-### Docker
+> ⚠️ **Note:**
+> If you change the frontend's default host (`http://localhost:8088`), make sure to update CORS configuration in `cmd/webcrawler/main.go` accordingly:
 
-From the root folder, run the Docker.
+```go
+r.Use(cors.New(cors.Config{
+	AllowOrigins:     []string{"NEW_HOST_URL"},
+	AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+	AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
+	ExposeHeaders:    []string{"Content-Length"},
+	AllowCredentials: true,
+	MaxAge:           12 * time.Hour,
+	}))
+```
+
+#### Frontend
+
+**Navigate to the frontend directory**
+
+```bash
+cd frontend
+```
+
+**Install dependencies**
+
+```bash
+npm install
+```
+
+**Run the frontend**
+
+```bash
+npm run dev
+```
+
+---
+
+### Docker Setup
+
+From the root of the project, run:
 
 ```bash
 docker compose up --build
 ```
 
-**Attention**
-If you change the default host of the frontend `http//localhost:8088`, you should also change the CORS policies inside cmd/webcrawler/main.go file accordingly;
-
-```Golang
-// Enable CORS for localhost:8088
-	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"NEW_HOST_URL"},
-		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
-		ExposeHeaders:    []string{"Content-Length"},
-		AllowCredentials: true,
-		MaxAge:           12 * time.Hour,
-	}))
-```
-
----
+This spins up the backend, frontend, and MySQL database with pre-configured networking.
 
 ## 🔐 Authentication
 
@@ -192,38 +245,6 @@ This project includes comprehensive end-to-end tests for the frontend using **Pl
 - The project uses MySQL as the database engine.
 
 - Upon startup (via Docker or manually), the schema is automatically created.
-
----
-
-## 🔧 Environment Variables
-
-Environment config is separated using `.env` files. Sample files are provided:
-
-### `.env (Backend)
-
-```.env
-DB_USER=myuser
-DB_PASSWORD=mypassword
-DB_HOST=mysql
-DB_PORT=3306
-DB_NAME=crawler
-```
-
-### .env.local (Backend)
-
-```bash
-DB_USER=myuser
-DB_PASSWORD=mypassword
-DB_HOST=localhost
-DB_PORT=3306
-DB_NAME=crawler
-```
-
-### `.env.example` (Frontend)
-
-```.env
-VITE_API_URL=http://localhost:8080
-```
 
 ---
 
