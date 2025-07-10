@@ -29,7 +29,7 @@ This project is a full-stack web application built as part of a technical assess
 ### 🔍 Detail View
 
 - Chart displaying internal vs. external links
-- List of broken (4xx/5xx) links with status codes
+- List of broken links
 
 ### 🧩 Bulk Actions
 
