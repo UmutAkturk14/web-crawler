@@ -33,7 +33,7 @@ export async function deleteAllEntries(page: Page) {
 
   await deleteButton.click();
 
-  await expect(page.getByText("Start")).toHaveCount(0);
+  await expect(page.getByText(/Reanalyze/i)).toHaveCount(0);
 }
 
 export async function startCrawlAndWait(
@@ -43,7 +43,9 @@ export async function startCrawlAndWait(
 ) {
   const urlRow = page.locator("tr", { hasText: url });
 
-  const startButton = urlRow.getByRole("button", { name: /Start|Reanalyze/i });
+  const startButton = urlRow.getByRole("button", {
+    name: /Start|Reanalyze|Retry/i,
+  });
   await startButton.click();
 
   await trackStatus(urlRow, timeout);
