@@ -1,14 +1,20 @@
 import { test, expect } from "@playwright/test";
 import { authenticateUser } from "./helpers/auth";
 import { addUrl } from "./helpers/url";
-import { deleteAllEntries, startCrawlAndWait, analyzeAll } from "./helpers/url";
+import {
+  deleteAllEntries,
+  startCrawlAndWait,
+  analyzeAll,
+  clickStartButton,
+  clickStopButton,
+} from "./helpers/url";
 import type { Page } from "@playwright/test";
 
 const testEmail = `testuser_${Date.now()}@example.com`;
 const testPassword = "testpassword123";
 
 const urls = [
-  "https://www.freecodecamp.org/news/transform-json-data-schema/",
+  "https://www.freecodecamp.org/news/how-to-work-with-react-forms/",
   "https://www.freecodecamp.org/news/how-to-use-a-resistive-soil-moisture-sensor/",
   "https://www.freecodecamp.org/news/how-to-deploy-a-nextjs-blog-on-sevalla/",
 ];
@@ -73,6 +79,7 @@ test("Bulk Delete works", async ({ page }) => {
   }
 
   await deleteAllEntries(page);
+  await expect(page.getByText(/Reanalyze|Start|Retry/i)).toHaveCount(0);
 });
 
 test("Detailed view opens on URL click", async ({ page }) => {
@@ -118,8 +125,38 @@ test("Single re-analyze works", async ({ page }) => {
   await startCrawlAndWait(page, newUrl, 20000);
 });
 
+test("Start/Stop toggles correctly", async ({ page }) => {
+  await ready(page);
+
+  const newUrl = `https://www.example.com/test-${Date.now()}`;
+  await addUrl(page, newUrl);
+
+  const row = page.locator("tr", { hasText: newUrl });
+  await expect(row).toBeVisible();
+
+  await clickStartButton(row);
+  await clickStopButton(row);
+});
+
 const ready = async (page: Page) => {
   await page.goto("http://localhost:8088/");
   await authenticateUser(page, "register", testEmail, testPassword);
-  await deleteAllEntries(page);
+
+  const rows = page.locator("table tbody tr");
+
+  const rowCount = await rows.count();
+
+  let hasStatusCell = false;
+  for (let i = 0; i < rowCount; i++) {
+    const row = rows.nth(i);
+    const statusCells = row.getByRole("cell", { name: /running|done|error/i });
+    if ((await statusCells.count()) > 0) {
+      hasStatusCell = true;
+      break;
+    }
+  }
+
+  if (hasStatusCell) {
+    await deleteAllEntries(page);
+  }
 };

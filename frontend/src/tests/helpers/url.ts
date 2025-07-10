@@ -16,10 +16,6 @@ export async function addUrl(page: Page, newUrl: string): Promise<void> {
 export async function deleteAllEntries(page: Page) {
   const deleteButton = page.getByRole("button", { name: "Delete" });
 
-  if ((await deleteButton.count()) === 0) return;
-
-  if (await deleteButton.isDisabled()) return;
-
   const didSelect = await selectAll(page);
   if (!didSelect) return;
 
@@ -33,7 +29,7 @@ export async function deleteAllEntries(page: Page) {
 
   await deleteButton.click();
 
-  await expect(page.getByText(/Reanalyze/i)).toHaveCount(0);
+  await expect(page.getByText(/Reanalyze|Start|Retry/i)).toHaveCount(0);
 }
 
 export async function startCrawlAndWait(
@@ -64,6 +60,20 @@ export async function analyzeAll(page: Page, urls: string[], timeout = 20000) {
     await expect(urlRow).toBeVisible({ timeout });
     await trackStatus(urlRow, timeout);
   }
+}
+
+export async function clickStartButton(row: Locator): Promise<void> {
+  const startButton = row.getByRole("button", { name: "Start" });
+  await expect(startButton).toBeVisible();
+  await startButton.click();
+  await expect(row.getByRole("button", { name: "Stop" })).toBeVisible();
+}
+
+export async function clickStopButton(row: Locator): Promise<void> {
+  const stopButton = row.getByRole("button", { name: "Stop" });
+  await expect(stopButton).toBeVisible();
+  await stopButton.click();
+  await expect(row.getByRole("button", { name: "Start" })).toBeVisible();
 }
 
 async function selectAll(page: Page): Promise<boolean> {
