@@ -41,39 +41,47 @@ func RegisterAuthRoutes(r *gin.Engine, db *gorm.DB) {
 			return
 		}
 
-		c.JSON(http.StatusCreated, gin.H{"message": "User registered successfully"})
+		// Generate JWT token on successful registration
+		token, err := auth.GenerateJWT(uint(user.ID))
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
+			return
+		}
+
+		c.JSON(http.StatusCreated, gin.H{
+			"message": "User registered successfully",
+			"token":   token,
+		})
 	})
 
+	authGroup.POST("/login", func(c *gin.Context) {
+		var req AuthRequest
+		if err := c.ShouldBindJSON(&req); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
+			return
+		}
 
-authGroup.POST("/login", func(c *gin.Context) {
-	var req AuthRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
-		return
-	}
+		var user models.User
+		if err := db.Where("email = ?", req.Email).First(&user).Error; err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
+			return
+		}
 
-	var user models.User
-	if err := db.Where("email = ?", req.Email).First(&user).Error; err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
-		return
-	}
+		if !auth.CheckPasswordHash(req.Password, user.PasswordHash) {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
+			return
+		}
+		// Generate JWT token using your middleware function
+		token, err := auth.GenerateJWT(uint(user.ID))
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
+			return
+		}
 
-	if !auth.CheckPasswordHash(req.Password, user.PasswordHash) {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
-		return
-	}
-	// Generate JWT token using your middleware function
-	token, err := auth.GenerateJWT(uint(user.ID))
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
-		return
-	}
-
-	// Return the token in response
-	c.JSON(http.StatusOK, gin.H{
-		"message": "Login successful",
-		"token":   token,
+		// Return the token in response
+		c.JSON(http.StatusOK, gin.H{
+			"message": "Login successful",
+			"token":   token,
+		})
 	})
-})
-
 }

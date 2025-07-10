@@ -27,8 +27,13 @@ const Register: React.FC<RegisterProps> = ({ onSuccess }) => {
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || "Registration failed");
+        throw new Error(data.error || "Register failed");
       }
+
+      const data = await res.json();
+
+      // Save token
+      localStorage.setItem("authToken", data.token);
 
       // Registration successful
       onSuccess();
