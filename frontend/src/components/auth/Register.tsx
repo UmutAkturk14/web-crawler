@@ -32,7 +32,6 @@ const Register: React.FC<RegisterProps> = ({ onSuccess }) => {
 
       const data = await res.json();
 
-      // Save token
       localStorage.setItem("authToken", data.token);
 
       // Registration successful

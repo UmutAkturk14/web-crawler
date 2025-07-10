@@ -38,7 +38,7 @@ export default function DashboardToolbar({
         {
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`, // Include the token in the request
+            Authorization: `Bearer ${token}`,
           },
         }
       );

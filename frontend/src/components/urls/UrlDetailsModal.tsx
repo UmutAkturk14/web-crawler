@@ -1,5 +1,3 @@
-// components/UrlDetailsModal.tsx
-
 import { useEffect, useState, useRef } from "react";
 import type { UrlReport } from "../../types/url-report";
 import { Doughnut } from "react-chartjs-2";
@@ -27,7 +25,7 @@ export default function UrlDetailsModal({ urlId, onClose }: Props) {
   useEffect(() => {
     const fetchUrlDetails = async () => {
       try {
-        const token = localStorage.getItem("authToken"); // get the token
+        const token = localStorage.getItem("authToken");
 
         const res = await fetch(
           `${import.meta.env.VITE_API_URL}/url/${urlId}`,
@@ -35,7 +33,7 @@ export default function UrlDetailsModal({ urlId, onClose }: Props) {
             method: "GET",
             headers: {
               "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`, // include the token
+              Authorization: `Bearer ${token}`,
             },
           }
         );
@@ -153,7 +151,6 @@ export default function UrlDetailsModal({ urlId, onClose }: Props) {
           </div>
         </div>
 
-        {/* Rest of the details */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mt-6 text-sm">
           <Section title="Title" content={data.title} />
           <Section

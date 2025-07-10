@@ -147,8 +147,8 @@ export default function Dashboard({ onLogout }: { onLogout: () => void }) {
         )
       );
 
-      await fetchUrls(); // refresh the list after deletion
-      setSelectedIds([]); // clear selection
+      await fetchUrls();
+      setSelectedIds([]);
     } catch (error) {
       console.error("Failed to delete URLs:", error);
       alert("Failed to delete one or more URLs.");

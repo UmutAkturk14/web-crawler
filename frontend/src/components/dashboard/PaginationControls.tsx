@@ -1,4 +1,3 @@
-// components/PaginationControls.tsx
 type PaginationControlsProps = {
   page: number;
   totalPages: number;
@@ -45,7 +44,7 @@ export default function PaginationControls({
           value={pageSize}
           onChange={(e) => {
             setPageSize(Number(e.target.value));
-            setPage(1); // reset to first page
+            setPage(1);
           }}
           className="border border-gray-300 rounded px-2 py-1"
         >

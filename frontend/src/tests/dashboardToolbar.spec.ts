@@ -98,12 +98,10 @@ test("Detailed view opens on URL click", async ({ page }) => {
   await addUrl(page, newUrl);
   await startCrawlAndWait(page, newUrl, 20000);
 
-  // Locate and click the row that contains the new URL
   const urlRow = page.locator("tr", { hasText: newUrl });
   await expect(urlRow).toBeVisible();
   await urlRow.click();
 
-  // Check all sections are visible, with a timeout for potentially slower loads
   for (const section of sections) {
     await expect(page.getByText(section).first()).toBeVisible({
       timeout: 10000,

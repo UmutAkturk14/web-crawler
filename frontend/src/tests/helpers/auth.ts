@@ -36,7 +36,6 @@ export async function authenticateUser(
       ]);
     });
   } else {
-    // Login path stays similar, maybe keep waitForTimeout for safety
     await test.step("Fill out login form and submit", async () => {
       await page.getByLabel("Email").fill(email);
       await page.getByLabel("Password").fill(password);
@@ -70,7 +69,6 @@ export async function logoutUser(page: Page): Promise<void> {
 
   await page.getByRole("button", { name: "Log out" }).click();
 
-  // Confirm we are logged out by checking for the login button
   await expect(page.getByRole("button", { name: "Login" })).toBeVisible({
     timeout: 5000,
   });

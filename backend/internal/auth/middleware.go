@@ -10,7 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var JwtSecret = []byte("your_secret_key") // 🔐 Replace with env var in production
+var JwtSecret = []byte("your_secret_key")
 
 const bearerSchema = "Bearer"
 

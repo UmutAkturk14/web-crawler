@@ -36,7 +36,6 @@ func urlToResponse(u models.URL) models.URLResponse {
 	}
 }
 
-// Parse and validate pagination parameters with defaults
 func parsePaginationParams(c *gin.Context, defaultPage, defaultPageSize int) (page, pageSize int) {
 	page = defaultPage
 	pageSize = defaultPageSize
@@ -52,7 +51,6 @@ func parsePaginationParams(c *gin.Context, defaultPage, defaultPageSize int) (pa
 	return
 }
 
-// Handle errors consistently
 func handleError(c *gin.Context, err error) {
 	if err == gorm.ErrRecordNotFound {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Record not found"})

@@ -51,7 +51,6 @@ export default function UrlTableRow({
       <tr
         className={`transition cursor-default ${bgColor}`}
         onClick={(e) => {
-          // Prevent modal from opening if the click came from checkbox
           const target = e.target as HTMLElement;
           if (
             target.closest("input[type='checkbox']") ||

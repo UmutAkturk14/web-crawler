@@ -37,7 +37,6 @@ func main() {
 		}
 	}
 
-	// Use environment variables (from file or docker-compose)
 	user := os.Getenv("DB_USER")
 	pass := os.Getenv("DB_PASSWORD")
 	host := os.Getenv("DB_HOST")

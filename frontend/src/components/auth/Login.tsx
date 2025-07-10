@@ -29,7 +29,6 @@ const Login: React.FC<LoginProps> = ({ onSuccess }) => {
 
       const data = await res.json();
 
-      // Save token
       localStorage.setItem("authToken", data.token);
 
       // Login successful

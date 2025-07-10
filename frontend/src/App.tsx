@@ -20,7 +20,7 @@ const App: React.FC = () => {
 
   const handleLogout = () => {
     localStorage.removeItem("authToken");
-    setIsLoggedIn(false); // This will trigger re-render to show login page
+    setIsLoggedIn(false);
   };
 
   if (isLoggedIn) {
